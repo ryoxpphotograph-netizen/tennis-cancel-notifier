@@ -93,7 +93,14 @@ def main():
     args = ap.parse_args()
 
     if args.test_line:
-        send_line("🎾 テスト通知です。テニスコート空き通知の設定は完了しています。")
+        # 実際の通知と同じ形のサンプル (予約リンクをタップして確認できる)
+        today = dt.datetime.now(JST).date()
+        samples = []
+        for t in TARGETS:
+            key = f"{t['name']}|{today.isoformat()}|{t['slots'][0]}"
+            samples.append(f"🎾 【テスト】{t['name']}テニスコートに空きが出ました\n"
+                           f"{format_slot(key, 1)}\n予約: {SITES[t['site']].BOOKING_URL}")
+        send_line("\n\n".join(samples) + "\n\n※これはテスト通知です。実際の空きではありません。")
         return
 
     today = dt.datetime.now(JST).date()
