@@ -25,6 +25,8 @@ TARGETS = [
      "days": "weekday", "slots": ["19:00-21:00"]},
     {"name": "川越運動公園", "site": "kawagoe", "shisetsu_code": "057",
      "days": "weekday", "slots": ["19:00-21:00"]},
+    {"name": "御伊勢塚公園", "site": "kawagoe", "shisetsu_code": "019", "row_prefix": "御伊勢塚公園テニスコート",
+     "days": "holiday", "slots": ["09:00-11:00", "11:00-13:00", "13:00-15:00", "15:00-17:00"]},
 ]
 DAYS_AHEAD = 70  # 何日先まで見るか (実際は各サイトの受付期間まで)
 
