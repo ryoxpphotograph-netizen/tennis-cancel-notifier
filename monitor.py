@@ -83,7 +83,9 @@ def send_line(text):
         url, body = "https://api.line.me/v2/bot/message/broadcast", {"messages": messages}
     r = requests.post(url, headers={"Authorization": f"Bearer {token}"}, json=body, timeout=30)
     if r.status_code != 200:
-        raise RuntimeError(f"LINE 送信失敗: {r.status_code} {r.text}")
+        err = RuntimeError(f"LINE 送信失敗: {r.status_code} {r.text}")
+        err.status = r.status_code  # 429 = 月の送信上限
+        raise err
 
 
 def main():
@@ -108,6 +110,7 @@ def main():
     prev_errors = prev.pop(ERRORS_KEY, {})
     state = {ERRORS_KEY: {}}
     messages = []
+    notified = []  # 今回通知する枠のキー
 
     # 施設ごとに別のサーバーなので並行して取得する
     with ThreadPoolExecutor(max_workers=len(TARGETS)) as pool:
@@ -141,11 +144,19 @@ def main():
             lines += [format_slot(k, c, notes.get(k)) for k, c in new.items()]
             lines.append(f"予約: {booking_url}")
             messages.append("\n".join(lines))
+            notified.extend(new)
 
     if args.dry_run:
         return
     if messages:
-        send_line("\n\n".join(messages))
+        try:
+            send_line("\n\n".join(messages))
+        except Exception as e:  # noqa: BLE001  送信失敗でも状態は保存し、毎回失敗し続けないようにする
+            print(f"LINE 送信エラー: {e}", file=sys.stderr)
+            if getattr(e, "status", None) != 429:
+                # 月の上限 (429) 以外の一時的な失敗は、次回もう一度送れるよう今回の新しい空きを未通知に戻す
+                for key in notified:
+                    state[key] = prev.get(key, 0)
     STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
