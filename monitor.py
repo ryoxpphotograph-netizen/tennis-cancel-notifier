@@ -73,15 +73,15 @@ def format_slot(key, count, note=None):
 def send_line(text):
     token = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
     user_id = os.environ.get("LINE_USER_ID")
-    if not token or not user_id:
+    if not token:
         print("[LINE 未設定のため送信しません]\n" + text)
         return
-    r = requests.post(
-        "https://api.line.me/v2/bot/message/push",
-        headers={"Authorization": f"Bearer {token}"},
-        json={"to": user_id, "messages": [{"type": "text", "text": text[:5000]}]},
-        timeout=30,
-    )
+    messages = [{"type": "text", "text": text[:5000]}]
+    if user_id:  # 自分だけに送る
+        url, body = "https://api.line.me/v2/bot/message/push", {"to": user_id, "messages": messages}
+    else:  # ユーザーID未設定なら公式アカウントの友だち全員 (= 自分) に送る
+        url, body = "https://api.line.me/v2/bot/message/broadcast", {"messages": messages}
+    r = requests.post(url, headers={"Authorization": f"Bearer {token}"}, json=body, timeout=30)
     if r.status_code != 200:
         raise RuntimeError(f"LINE 送信失敗: {r.status_code} {r.text}")
 

@@ -22,7 +22,8 @@ GitHub Actions 上で動くので、PC の電源を切っていても動き続�
 3. チャネルの **Messaging API設定** タブ
    - QRコードを読み取り、自分の LINE でこの公式アカウントを**友だち追加**
    - 一番下の「チャネルアクセストークン（長期）」を**発行**してコピー → `LINE_CHANNEL_ACCESS_TOKEN`
-4. **チャネル基本設定** タブの一番下「あなたのユーザーID」（`U` から始まる文字列）をコピー → `LINE_USER_ID`
+4. （任意）**チャネル基本設定** タブの一番下「あなたのユーザーID」（`U` から始まる文字列）をコピー → `LINE_USER_ID`
+   - 登録しない場合は、公式アカウントの友だち全員に送ります。友だちが自分だけなら同じことです。
 
 > 無料プランは月200通まで送れます。この用途なら十分です。
 
@@ -30,9 +31,9 @@ GitHub Actions 上で動くので、PC の電源を切っていても動き続�
 
 1. GitHub で新しいリポジトリを作成（**Public 推奨**。理由は下記）
 2. このフォルダのファイル一式（`.github` フォルダ・`sites` フォルダを含む）をアップロード
-3. リポジトリの **Settings → Secrets and variables → Actions → New repository secret** で2つ登録
-   - `LINE_CHANNEL_ACCESS_TOKEN`
-   - `LINE_USER_ID`
+3. リポジトリの **Settings → Secrets and variables → Actions → New repository secret** で登録
+   - `LINE_CHANNEL_ACCESS_TOKEN`（必須）
+   - `LINE_USER_ID`（任意）
 
   トークンは Secrets に入れるので、Public リポジトリでも他人には見えません。
 
