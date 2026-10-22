@@ -1,0 +1,55 @@
+name: テニスコート空き監視
+
+on:
+  schedule:
+    # 10分ごと (UTC表記)。GitHub 側の混雑で数分〜十数分遅れることがあります
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "実行モード"
+        type: choice
+        default: run
+        options: [run, dry-run, test-line]
+
+concurrency:
+  group: monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # 前回の空き状況を復元 (新しく空いた枠だけ通知するため)
+      - uses: actions/cache/restore@v4
+        with:
+          path: state.json
+          key: state-${{ github.run_id }}
+          restore-keys: state-
+
+      - name: 監視
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: |
+          case "${{ inputs.mode }}" in
+            dry-run)   python monitor.py --dry-run ;;
+            test-line) python monitor.py --test-line ;;
+            *)         python monitor.py ;;
+          esac
+
+      - uses: actions/cache/save@v4
+        if: always() && hashFiles('state.json') != ''
+        with:
+          path: state.json
+          key: state-${{ github.run_id }}
