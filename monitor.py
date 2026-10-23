@@ -93,15 +93,20 @@ def send_line(text):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true", help="取得結果を表示するだけで通知・保存しない")
-    ap.add_argument("--test-line", action="store_true", help="LINE にテストメッセージを送る")
+    ap.add_argument("--test-line", nargs="?", const="", metavar="施設名",
+                    help="LINE にテストメッセージを送る (施設名を付けるとその施設だけ)")
     args = ap.parse_args()
 
-    if args.test_line:
+    if args.test_line is not None:
         # 実際の通知と同じ形のサンプル (予約リンクをタップして確認できる)
         today = dt.datetime.now(JST).date()
+        targets = [t for t in TARGETS if args.test_line in t["name"]]
+        if not targets:
+            sys.exit(f"施設「{args.test_line}」は監視対象にありません: {', '.join(t['name'] for t in TARGETS)}")
         samples = []
-        for t in TARGETS:
-            key = f"{t['name']}|{today.isoformat()}|{t['slots'][0]}"
+        for t in targets:
+            date = min(wanted_dates(t, today))  # 監視対象の曜日で一番近い日
+            key = f"{t['name']}|{date.isoformat()}|{t['slots'][0]}"
             samples.append(f"🎾 【テスト】{t['name']}テニスコートに空きが出ました\n"
                            f"{format_slot(key, 1)}\n予約: {SITES[t['site']].BOOKING_URL}")
         send_line("\n\n".join(samples) + "\n\n※これはテスト通知です。実際の空きではありません。")

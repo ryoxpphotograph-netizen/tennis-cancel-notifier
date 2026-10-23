@@ -11,6 +11,10 @@ on:
         type: choice
         default: run
         options: [run, dry-run, test-line]
+      test_target:
+        description: "test-line のとき、テストする施設名 (空欄なら全施設。例: 御伊勢塚)"
+        required: false
+        default: ""
 
 concurrency:
   group: monitor
@@ -41,10 +45,11 @@ jobs:
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          TEST_TARGET: ${{ inputs.test_target }}
         run: |
           case "${{ inputs.mode }}" in
             dry-run)   python monitor.py --dry-run ;;
-            test-line) python monitor.py --test-line ;;
+            test-line) python monitor.py --test-line "$TEST_TARGET" ;;
             *)         python monitor.py ;;
           esac
 
