@@ -48,6 +48,23 @@ GitHub Actions 上で動くので、PC の電源を切っていても動き続�
 | `dry-run` | 取得した空き状況をログに表示するだけ |
 | `run` | 通常の監視（以降は10分ごとに自動実行） |
 
+## 外部サービスから10分ごとに起動する（推奨）
+
+GitHub の定期実行 (`schedule`) は混雑時に大きく間引かれ、数時間動かないことがあります。
+[cron-job.org](https://cron-job.org)（無料）から10分ごとに GitHub API を呼んで起動します。`schedule` は予備として残しています。
+
+1. **GitHub トークンを発行**: [Fine-grained token の作成画面](https://github.com/settings/personal-access-tokens/new)
+   - Repository access: **Only select repositories** → このリポジトリ
+   - Permissions → Repository permissions → **Actions: Read and write**
+   - 有効期限が切れたら作り直して、cron-job.org 側を差し替えます
+2. **cron-job.org でジョブを作成**
+   - URL: `https://api.github.com/repos/<ユーザー名>/<リポジトリ名>/actions/workflows/monitor.yml/dispatches`
+   - Schedule: Every 10 minutes
+   - Request method: `POST`
+   - Headers: `Accept: application/vnd.github+json` / `Authorization: Bearer <トークン>` / `X-GitHub-Api-Version: 2022-11-28`
+   - Request body: `{"ref":"main"}`
+   - テスト実行で `204` が返れば成功（Actions タブに `workflow_dispatch` の実行が出ます）
+
 ## 監視条件の変更
 
 `monitor.py` 冒頭の `TARGETS` を書き換えます。
